@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Utensils, BookOpen, MessageSquare, Sparkles } from 'lucide-react';
+import SurvivalClock from '@/components/SurvivalClock';
 
 const features = [
   {
@@ -59,8 +60,13 @@ export default function Home() {
         </p>
       </div>
 
+      {/* Survival Clock */}
+      <div className="mx-auto mt-12 max-w-md mb-8">
+        <SurvivalClock />
+      </div>
+
       {/* Feature Cards */}
-      <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((feature) => {
           const Icon = feature.icon;
           return (
