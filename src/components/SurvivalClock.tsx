@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock, AlertTriangle, Info, PartyPopper, Bell } from 'lucide-react';
+import { Clock, AlertTriangle, Info, PartyPopper, Bell, X } from 'lucide-react';
 
 const DEADLINES = [
   // --- SPRING 2026 ---
@@ -65,6 +65,35 @@ function calculateTimeLeft(targetDate: Date): TimeLeft {
   };
 }
 
+function getSemester(date: Date): 'spring' | 'summer' | 'fall' {
+  const month = date.getMonth(); // 0-indexed
+  if (month >= 0 && month <= 4) return 'spring'; // Jan-May
+  if (month >= 4 && month <= 7) return 'summer'; // May-Aug
+  return 'fall'; // Aug-Dec
+}
+
+function getGroupedDeadlines() {
+  const now = new Date();
+  const nextDeadline = getNextDeadline();
+  
+  const deadlinesWithMeta = DEADLINES.map((d) => {
+    const dateObj = new Date(d.date);
+    return {
+      ...d,
+      dateObj,
+      isPast: dateObj < now,
+      isNext: nextDeadline ? d.date === nextDeadline.date : false,
+      semester: getSemester(dateObj),
+    };
+  });
+
+  return {
+    spring: deadlinesWithMeta.filter((d) => d.semester === 'spring'),
+    summer: deadlinesWithMeta.filter((d) => d.semester === 'summer'),
+    fall: deadlinesWithMeta.filter((d) => d.semester === 'fall'),
+  };
+}
+
 const typeStyles: Record<DeadlineType, { bg: string; border: string; text: string; icon: typeof Clock }> = {
   info: {
     bg: 'bg-blue-50 dark:bg-blue-950/30',
@@ -102,6 +131,7 @@ export default function SurvivalClock() {
   const [nextDeadline, setNextDeadline] = useState<ReturnType<typeof getNextDeadline> | null>(null);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [mounted, setMounted] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -141,53 +171,174 @@ export default function SurvivalClock() {
   const type = nextDeadline.type as DeadlineType;
   const styles = typeStyles[type];
   const Icon = styles.icon;
+  const grouped = getGroupedDeadlines();
 
   return (
-    <div className={`rounded-xl border ${styles.border} ${styles.bg} p-6 transition-all`}>
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-4">
-        <Icon className={`h-5 w-5 ${styles.text}`} />
-        <span className={`text-sm font-medium uppercase tracking-wide ${styles.text}`}>
-          Next Deadline
-        </span>
+    <>
+      <div className={`rounded-xl border ${styles.border} ${styles.bg} p-6 transition-all`}>
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-4">
+          <Icon className={`h-5 w-5 ${styles.text}`} />
+          <span className={`text-sm font-medium uppercase tracking-wide ${styles.text}`}>
+            Next Deadline
+          </span>
+        </div>
+
+        {/* Deadline Name */}
+        <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
+          {nextDeadline.name}
+        </h3>
+
+        {/* Countdown Grid */}
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { label: 'Days', value: timeLeft.days },
+            { label: 'Hours', value: timeLeft.hours },
+            { label: 'Mins', value: timeLeft.minutes },
+            { label: 'Secs', value: timeLeft.seconds },
+          ].map((unit) => (
+            <div
+              key={unit.label}
+              className="flex flex-col items-center rounded-lg bg-white/60 dark:bg-zinc-800/60 p-3"
+            >
+              <span className="text-2xl font-bold tabular-nums text-zinc-900 dark:text-zinc-100">
+                {String(unit.value).padStart(2, '0')}
+              </span>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                {unit.label}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Date Display */}
+        <p className="mt-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
+          {nextDeadline.dateObj.toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })}
+        </p>
+
+        {/* View Calendar Button */}
+        <button
+          onClick={() => setIsCalendarOpen(true)}
+          className="mt-2 block w-full text-center text-xs text-asu-maroon underline hover:text-asu-gold cursor-pointer transition-colors"
+        >
+          📅 View 2026 Calendar
+        </button>
       </div>
 
-      {/* Deadline Name */}
-      <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
-        {nextDeadline.name}
-      </h3>
-
-      {/* Countdown Grid */}
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: 'Days', value: timeLeft.days },
-          { label: 'Hours', value: timeLeft.hours },
-          { label: 'Mins', value: timeLeft.minutes },
-          { label: 'Secs', value: timeLeft.seconds },
-        ].map((unit) => (
+      {/* Calendar Modal */}
+      {isCalendarOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setIsCalendarOpen(false)}
+        >
           <div
-            key={unit.label}
-            className="flex flex-col items-center rounded-lg bg-white/60 dark:bg-zinc-800/60 p-3"
+            className="bg-white dark:bg-zinc-900 rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
           >
-            <span className="text-2xl font-bold tabular-nums text-zinc-900 dark:text-zinc-100">
-              {String(unit.value).padStart(2, '0')}
-            </span>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
-              {unit.label}
-            </span>
-          </div>
-        ))}
-      </div>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                2026 Academic Calendar
+              </h2>
+              <button
+                onClick={() => setIsCalendarOpen(false)}
+                className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-      {/* Date Display */}
-      <p className="mt-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
-        {nextDeadline.dateObj.toLocaleDateString('en-US', {
-          weekday: 'long',
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-        })}
-      </p>
-    </div>
+            {/* Spring Section */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-3 flex items-center gap-2">
+                🌸 Spring 2026
+              </h3>
+              <div className="space-y-2">
+                {grouped.spring.map((deadline) => (
+                  <div
+                    key={deadline.date}
+                    className={`flex items-start gap-3 rounded-lg px-3 py-2 text-sm ${
+                      deadline.isNext
+                        ? 'bg-yellow-100 dark:bg-yellow-900/30'
+                        : deadline.isPast
+                        ? 'opacity-50'
+                        : ''
+                    }`}
+                  >
+                    <span className={`shrink-0 font-medium text-zinc-500 dark:text-zinc-400 w-12 ${deadline.isPast ? 'line-through' : ''}`}>
+                      {deadline.dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                    <span className={`text-zinc-700 dark:text-zinc-300 ${deadline.isPast ? 'line-through' : ''}`}>
+                      {deadline.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Summer Section */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-3 flex items-center gap-2">
+                ☀️ Summer 2026
+              </h3>
+              <div className="space-y-2">
+                {grouped.summer.map((deadline) => (
+                  <div
+                    key={deadline.date}
+                    className={`flex items-start gap-3 rounded-lg px-3 py-2 text-sm ${
+                      deadline.isNext
+                        ? 'bg-yellow-100 dark:bg-yellow-900/30'
+                        : deadline.isPast
+                        ? 'opacity-50'
+                        : ''
+                    }`}
+                  >
+                    <span className={`shrink-0 font-medium text-zinc-500 dark:text-zinc-400 w-12 ${deadline.isPast ? 'line-through' : ''}`}>
+                      {deadline.dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                    <span className={`text-zinc-700 dark:text-zinc-300 ${deadline.isPast ? 'line-through' : ''}`}>
+                      {deadline.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Fall Section */}
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-3 flex items-center gap-2">
+                🍂 Fall 2026
+              </h3>
+              <div className="space-y-2">
+                {grouped.fall.map((deadline) => (
+                  <div
+                    key={deadline.date}
+                    className={`flex items-start gap-3 rounded-lg px-3 py-2 text-sm ${
+                      deadline.isNext
+                        ? 'bg-yellow-100 dark:bg-yellow-900/30'
+                        : deadline.isPast
+                        ? 'opacity-50'
+                        : ''
+                    }`}
+                  >
+                    <span className={`shrink-0 font-medium text-zinc-500 dark:text-zinc-400 w-12 ${deadline.isPast ? 'line-through' : ''}`}>
+                      {deadline.dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                    <span className={`text-zinc-700 dark:text-zinc-300 ${deadline.isPast ? 'line-through' : ''}`}>
+                      {deadline.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
