@@ -231,10 +231,11 @@ export async function addPlace(formData: FormData) {
     const name = formData.get('name') as string;
     const category = formData.get('category') as string;
     const location = formData.get('location') as string;
+    const googleMapsLink = formData.get('googleMapsLink') as string;
     const acceptsMnG = formData.get('acceptsMnG') === 'on';
     const isLateNight = formData.get('isLateNight') === 'on';
     const isBudget = formData.get('isBudget') === 'on';
-    const deals = formData.get('deals') as string;
+    const insiderIntel = formData.get('insiderIntel') as string;
 
     if (!name) {
       return { success: false, error: 'Name is required' };
@@ -244,12 +245,13 @@ export async function addPlace(formData: FormData) {
       name: name.trim(),
       category: category || undefined,
       location: location?.trim() || undefined,
+      googleMapsLink: googleMapsLink?.trim() || undefined,
       flags: {
         acceptsMnG,
         isLateNight,
         isBudget,
       },
-      deals: deals?.trim() || undefined,
+      insiderIntel: insiderIntel?.trim() || undefined,
     });
 
     revalidatePath('/food');

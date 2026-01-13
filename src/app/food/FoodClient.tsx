@@ -5,17 +5,24 @@ import { Search, MapPin, Clock, DollarSign, Sparkles, Utensils } from 'lucide-re
 import { getPlaces } from '@/lib/actions';
 import ComingSoon from '@/components/ComingSoon';
 
+type PlaceCategory = 
+  | 'On-Campus Deals'
+  | 'Around ASU (3-mile radius)'
+  | 'Cheap & Heavenly'
+  | 'Late Night Cravings'
+  | 'Date Night / Parents in Town';
+
 interface Place {
   _id: string;
   name: string;
-  category?: 'Food' | 'Study' | 'Cafe';
+  category?: PlaceCategory;
   location?: string;
   flags?: {
     acceptsMnG?: boolean;
     isLateNight?: boolean;
     isBudget?: boolean;
   };
-  deals?: string;
+  insiderIntel?: string;
   image?: string;
 }
 
@@ -185,11 +192,11 @@ function PlaceCard({ place }: { place: Place }) {
           </p>
         )}
 
-        {/* Deal Highlight */}
-        {place.deals && (
-          <div className="mt-3 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-950/30 dark:to-emerald-950/30">
-            <p className="text-sm font-medium text-green-700 dark:text-green-400">
-              🎉 {place.deals}
+        {/* Insider Intel */}
+        {place.insiderIntel && (
+          <div className="mt-3 rounded-lg bg-gradient-to-r from-amber-50 to-yellow-50 p-3 dark:from-amber-950/30 dark:to-yellow-950/30">
+            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+              💡 {place.insiderIntel}
             </p>
           </div>
         )}

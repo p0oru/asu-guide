@@ -50,17 +50,27 @@ const GEN_ED_OPTIONS = [
   { value: 'SUST', label: 'SUST (Sustainability)' },
 ] as const;
 
+// Place categories with helper text
+const PLACE_CATEGORIES = [
+  { value: 'On-Campus Deals', label: 'On-Campus Deals', hint: 'MU, Dining Halls, M&G spots' },
+  { value: 'Around ASU (3-mile radius)', label: 'Around ASU (3-mile radius)', hint: 'Within ~3 miles of campus' },
+  { value: 'Cheap & Heavenly', label: 'Cheap & Heavenly', hint: 'Budget-friendly gems' },
+  { value: 'Late Night Cravings', label: 'Late Night Cravings', hint: 'Open past 10pm (Wkday) or 12am (Wkend)' },
+  { value: 'Date Night / Parents in Town', label: 'Date Night / Parents in Town', hint: 'Nicer vibe spots' },
+] as const;
+
 interface Place {
   _id: string;
   name: string;
   category?: string;
   location?: string;
+  googleMapsLink?: string;
   flags?: {
     acceptsMnG?: boolean;
     isLateNight?: boolean;
     isBudget?: boolean;
   };
-  deals?: string;
+  insiderIntel?: string;
 }
 
 interface Suggestion {
@@ -589,28 +599,56 @@ function PlaceManagement({
 
       {/* Add Form */}
       <form onSubmit={handleSubmit} className="mb-6 space-y-3 rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <input
-            name="name"
-            placeholder="Place Name *"
-            required
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          />
+        {/* Name */}
+        <input
+          name="name"
+          placeholder="Place Name *"
+          required
+          className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        />
+
+        {/* Category with Helper Text */}
+        <div>
+          <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+            Category
+          </label>
           <select
             name="category"
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
           >
             <option value="">Select Category</option>
-            <option value="Food">Food</option>
-            <option value="Study">Study</option>
-            <option value="Cafe">Cafe</option>
+            {PLACE_CATEGORIES.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
+            ))}
           </select>
+          {/* Category Guidance */}
+          <div className="mt-2 space-y-1 rounded-md bg-zinc-100 p-2 dark:bg-zinc-900">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Category Guide</p>
+            <ul className="space-y-0.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+              <li><span className="font-medium text-zinc-600 dark:text-zinc-300">Around ASU:</span> Within ~3 miles of campus</li>
+              <li><span className="font-medium text-zinc-600 dark:text-zinc-300">Late Night:</span> Open past 10pm (Wkday) or 12am (Wkend)</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Location & Google Maps Link */}
+        <div className="grid gap-3 sm:grid-cols-2">
           <input
             name="location"
             placeholder="Location/Address"
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 sm:col-span-2"
+            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          />
+          <input
+            name="googleMapsLink"
+            type="url"
+            placeholder="Google Maps Link (optional)"
+            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
           />
         </div>
+
+        {/* Flags */}
         <div className="flex flex-wrap gap-4">
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="acceptsMnG" className="rounded" />
@@ -625,12 +663,20 @@ function PlaceManagement({
             Budget Friendly
           </label>
         </div>
-        <textarea
-          name="deals"
-          placeholder="Current Deals or Promotions"
-          rows={2}
-          className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-        />
+
+        {/* Insider Intel */}
+        <div>
+          <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+            Insider Intel (Recs / Budget Hacks)
+          </label>
+          <textarea
+            name="insiderIntel"
+            placeholder="e.g. $11 Combo on Tuesdays"
+            rows={2}
+            className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          />
+        </div>
+
         <button
           type="submit"
           disabled={isAdding}

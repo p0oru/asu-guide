@@ -5,7 +5,10 @@ import DeadlineWidget from '@/components/DeadlineWidget';
 
 export default function Home() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      {/* Deadline Widget - Fixed position top-right on desktop, inline on mobile */}
+      <DeadlineWidget />
+
       {/* Hero Section */}
       <div className="text-center">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-asu-maroon/10 px-4 py-2 text-sm font-medium text-asu-maroon">
@@ -34,11 +37,6 @@ export default function Home() {
           Everything you need to navigate life at Arizona State University. From the best food spots
           to easy A classes, we&apos;ve got you covered.
         </p>
-      </div>
-
-      {/* Deadline Widget (Mini Widget) */}
-      <div className="mt-8">
-        <DeadlineWidget />
       </div>
 
       {/* Main Navigation - 2 Column Grid */}

@@ -88,7 +88,7 @@ export default function CommunityPage() {
             <ul className="mt-1 text-sm text-maroon-700 dark:text-maroon-300 space-y-1">
               <li>• Hidden food gems that accept M&G or are budget-friendly</li>
               <li>• Classes with great professors or easy grading</li>
-              <li>• Study spots, campus hacks, or survival tips</li>
+              <li>• Study spots, campus hacks, or insider tips</li>
             </ul>
           </div>
         </div>

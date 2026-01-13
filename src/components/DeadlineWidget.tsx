@@ -52,10 +52,10 @@ export default function DeadlineWidget() {
 
   if (!mounted) {
     return (
-      <div className="max-w-sm mx-auto p-4 bg-white/80 backdrop-blur border border-zinc-200 rounded-xl shadow-sm text-center mb-6 dark:bg-zinc-900/80 dark:border-zinc-800">
+      <div className="absolute top-4 right-4 z-40 w-48 p-2 bg-white/95 backdrop-blur-sm border border-zinc-200/50 rounded-lg shadow-sm dark:bg-zinc-900/95 dark:border-zinc-800/50 sm:right-6 lg:right-8 max-sm:relative max-sm:top-0 max-sm:right-0 max-sm:mx-auto max-sm:mb-4 max-sm:w-full max-sm:max-w-xs">
         <div className="animate-pulse">
-          <div className="h-4 w-24 mx-auto rounded bg-zinc-200 dark:bg-zinc-700" />
-          <div className="mt-2 h-4 w-40 mx-auto rounded bg-zinc-200 dark:bg-zinc-700" />
+          <div className="h-2.5 w-16 rounded bg-zinc-200 dark:bg-zinc-700" />
+          <div className="mt-1 h-2.5 w-full rounded bg-zinc-200 dark:bg-zinc-700" />
         </div>
       </div>
     );
@@ -73,25 +73,25 @@ export default function DeadlineWidget() {
   return (
     <Link
       href="/calendar"
-      className="block max-w-sm mx-auto p-4 bg-white/80 backdrop-blur border border-zinc-200 rounded-xl shadow-sm hover:shadow-md transition-all text-center mb-6 dark:bg-zinc-900/80 dark:border-zinc-800 group"
+      className="absolute top-4 right-4 z-40 w-48 p-2 bg-white/95 backdrop-blur-sm border border-zinc-200/50 rounded-lg shadow-sm hover:shadow-md hover:border-zinc-300 transition-all dark:bg-zinc-900/95 dark:border-zinc-800/50 dark:hover:border-zinc-700 group sm:right-6 lg:right-8 max-sm:relative max-sm:top-0 max-sm:right-0 max-sm:mx-auto max-sm:mb-4 max-sm:w-full max-sm:max-w-xs"
     >
       {/* Header */}
-      <div className="flex items-center justify-center gap-2 mb-2">
-        <Calendar className="h-4 w-4 text-asu-maroon" />
-        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <div className="flex items-center gap-1 mb-0.5">
+        <Calendar className="h-2.5 w-2.5 text-asu-maroon" />
+        <span className="text-[9px] font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
           Upcoming Deadlines
         </span>
       </div>
 
       {/* Next Deadline */}
-      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-        Next: <span className="text-asu-maroon">{nextDeadline.name}</span>
-        <span className="text-zinc-500 dark:text-zinc-400"> — {formattedDate}</span>
+      <p className="text-[11px] font-medium text-zinc-800 dark:text-zinc-200 leading-tight">
+        <span className="text-asu-maroon">{nextDeadline.name}</span>
+        <span className="text-zinc-400 dark:text-zinc-500"> — {formattedDate}</span>
       </p>
 
       {/* Subtext */}
-      <p className="mt-1 text-xs text-zinc-400 group-hover:text-asu-gold transition-colors">
-        Click for full 2026 calendar
+      <p className="mt-0.5 text-[9px] text-zinc-400 group-hover:text-asu-gold transition-colors">
+        Click for full calendar
       </p>
     </Link>
   );
