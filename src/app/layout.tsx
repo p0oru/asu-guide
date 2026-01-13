@@ -37,7 +37,7 @@ export default function RootLayout({
           <img
             src="/asu_trident.svg"
             alt=""
-            className="h-[60vh] w-auto"
+            className="h-[60vh] w-auto brightness-50 dark:brightness-100"
           />
         </div>
         

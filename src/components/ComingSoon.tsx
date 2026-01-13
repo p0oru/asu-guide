@@ -12,7 +12,7 @@ export default function ComingSoon({ message = 'STAY TUNED: SUN DEVIL DEALS DROP
         alt="ASU Trident"
         width={80}
         height={96}
-        className="mb-6 drop-shadow-lg"
+        className="mb-6 brightness-50 drop-shadow-lg"
       />
       <h3 className="text-xl font-bold uppercase tracking-wider text-asu-maroon sm:text-2xl">
         {message}

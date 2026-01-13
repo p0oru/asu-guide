@@ -23,7 +23,7 @@ export default function Home() {
             alt="ASU Trident"
             width={80}
             height={96}
-            className="h-20 w-auto"
+            className="h-20 w-auto brightness-50 dark:brightness-100"
           />
         </div>
         
