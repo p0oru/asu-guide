@@ -1,0 +1,11 @@
+# ASU Survival Guide - robots.txt
+# Allow all search engines to index the site
+
+User-agent: *
+Allow: /
+
+# Sitemap (add when deployed)
+# Sitemap: https://your-domain.com/sitemap.xml
+
+# Disallow admin routes from indexing
+Disallow: /admin
