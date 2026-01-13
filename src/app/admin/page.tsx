@@ -22,6 +22,7 @@ import {
   deleteSuggestion,
   verifyAdmin,
 } from '@/lib/actions';
+import ConfirmModal from '@/components/ConfirmModal';
 
 interface Class {
   _id: string;
@@ -66,6 +67,14 @@ export default function AdminPage() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
+  // Delete modal states
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{
+    id: string;
+    type: 'class' | 'place' | 'suggestion';
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Load data when logged in
   useEffect(() => {
     if (isLoggedIn) {
@@ -97,6 +106,61 @@ export default function AdminPage() {
       setError('Invalid access code');
     }
     setIsLoading(false);
+  }
+
+  function openDeleteModal(id: string, type: 'class' | 'place' | 'suggestion') {
+    setItemToDelete({ id, type });
+    setIsDeleteModalOpen(true);
+  }
+
+  function closeDeleteModal() {
+    setIsDeleteModalOpen(false);
+    setItemToDelete(null);
+  }
+
+  async function handleConfirmDelete() {
+    if (!itemToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      switch (itemToDelete.type) {
+        case 'class':
+          await deleteClass(itemToDelete.id);
+          break;
+        case 'place':
+          await deletePlace(itemToDelete.id);
+          break;
+        case 'suggestion':
+          await deleteSuggestion(itemToDelete.id);
+          break;
+      }
+      await loadAllData();
+    } finally {
+      setIsDeleting(false);
+      closeDeleteModal();
+    }
+  }
+
+  function getDeleteModalContent() {
+    if (!itemToDelete) return { title: '', message: '' };
+    
+    switch (itemToDelete.type) {
+      case 'class':
+        return {
+          title: 'Delete Class',
+          message: 'Are you sure you want to delete this class? This action cannot be undone.',
+        };
+      case 'place':
+        return {
+          title: 'Delete Place',
+          message: 'Are you sure you want to delete this place? This action cannot be undone.',
+        };
+      case 'suggestion':
+        return {
+          title: 'Dismiss Suggestion',
+          message: 'Are you sure you want to dismiss this suggestion? This action cannot be undone.',
+        };
+    }
   }
 
   if (!isLoggedIn) {
@@ -183,12 +247,14 @@ export default function AdminPage() {
         <ClassManagement
           classes={classes}
           onRefresh={loadAllData}
+          onDelete={(id) => openDeleteModal(id, 'class')}
         />
 
         {/* Place Management */}
         <PlaceManagement
           places={places}
           onRefresh={loadAllData}
+          onDelete={(id) => openDeleteModal(id, 'place')}
         />
       </div>
 
@@ -197,8 +263,19 @@ export default function AdminPage() {
         <SuggestionInbox
           suggestions={suggestions}
           onRefresh={loadAllData}
+          onDelete={(id) => openDeleteModal(id, 'suggestion')}
         />
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title={getDeleteModalContent().title}
+        message={getDeleteModalContent().message}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
@@ -207,9 +284,11 @@ export default function AdminPage() {
 function ClassManagement({
   classes,
   onRefresh,
+  onDelete,
 }: {
   classes: Class[];
   onRefresh: () => void;
+  onDelete: (id: string) => void;
 }) {
   const [isAdding, setIsAdding] = useState(false);
 
@@ -221,13 +300,6 @@ function ClassManagement({
     (e.target as HTMLFormElement).reset();
     setIsAdding(false);
     onRefresh();
-  }
-
-  async function handleDelete(id: string) {
-    if (confirm('Are you sure you want to delete this class?')) {
-      await deleteClass(id);
-      onRefresh();
-    }
   }
 
   return (
@@ -322,7 +394,7 @@ function ClassManagement({
                 )}
               </div>
               <button
-                onClick={() => handleDelete(cls._id)}
+                onClick={() => onDelete(cls._id)}
                 className="rounded-lg p-2 text-zinc-400 hover:bg-red-50 hover:text-red-600"
               >
                 <Trash2 className="h-4 w-4" />
@@ -339,9 +411,11 @@ function ClassManagement({
 function PlaceManagement({
   places,
   onRefresh,
+  onDelete,
 }: {
   places: Place[];
   onRefresh: () => void;
+  onDelete: (id: string) => void;
 }) {
   const [isAdding, setIsAdding] = useState(false);
 
@@ -353,13 +427,6 @@ function PlaceManagement({
     (e.target as HTMLFormElement).reset();
     setIsAdding(false);
     onRefresh();
-  }
-
-  async function handleDelete(id: string) {
-    if (confirm('Are you sure you want to delete this place?')) {
-      await deletePlace(id);
-      onRefresh();
-    }
   }
 
   return (
@@ -449,7 +516,7 @@ function PlaceManagement({
                 )}
               </div>
               <button
-                onClick={() => handleDelete(place._id)}
+                onClick={() => onDelete(place._id)}
                 className="rounded-lg p-2 text-zinc-400 hover:bg-red-50 hover:text-red-600"
               >
                 <Trash2 className="h-4 w-4" />
@@ -465,18 +532,12 @@ function PlaceManagement({
 // Suggestion Inbox Component
 function SuggestionInbox({
   suggestions,
-  onRefresh,
+  onDelete,
 }: {
   suggestions: Suggestion[];
   onRefresh: () => void;
+  onDelete: (id: string) => void;
 }) {
-  async function handleDelete(id: string) {
-    if (confirm('Dismiss this suggestion?')) {
-      await deleteSuggestion(id);
-      onRefresh();
-    }
-  }
-
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <div className="mb-4 flex items-center gap-2">
@@ -510,7 +571,7 @@ function SuggestionInbox({
                   </span>
                 </div>
                 <button
-                  onClick={() => handleDelete(suggestion._id)}
+                  onClick={() => onDelete(suggestion._id)}
                   className="rounded-lg p-1.5 text-zinc-400 hover:bg-red-50 hover:text-red-600"
                   title="Dismiss"
                 >
