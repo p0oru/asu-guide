@@ -1,31 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Utensils, BookOpen, MessageSquare, Sparkles } from 'lucide-react';
-import SurvivalClock from '@/components/SurvivalClock';
-
-const features = [
-  {
-    href: '/food',
-    icon: Utensils,
-    title: 'Food Directory',
-    description: 'Find the best eats on and off campus. Filter by M&G, late night hours, and budget.',
-    color: 'from-orange-500 to-red-500',
-  },
-  {
-    href: '/classes',
-    icon: BookOpen,
-    title: 'Class Guide',
-    description: 'Discover easy A classes, check difficulty ratings, and find Gen Ed options.',
-    color: 'from-blue-500 to-indigo-500',
-  },
-  {
-    href: '/community',
-    icon: MessageSquare,
-    title: 'Community',
-    description: 'Share your own tips and suggestions with fellow Sun Devils.',
-    color: 'from-green-500 to-emerald-500',
-  },
-];
+import DeadlineWidget from '@/components/DeadlineWidget';
 
 export default function Home() {
   return (
@@ -49,9 +25,9 @@ export default function Home() {
         </div>
         
         <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-5xl md:text-6xl">
-          ASU{' '}
+          Sun Devil{' '}
           <span className="bg-gradient-to-r from-asu-maroon to-asu-gold bg-clip-text text-transparent">
-            Survival Guide
+            Guide
           </span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
@@ -60,40 +36,85 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Survival Clock */}
-      <div className="mx-auto mt-12 max-w-md mb-8">
-        <SurvivalClock />
+      {/* Deadline Widget (Mini Widget) */}
+      <div className="mt-8">
+        <DeadlineWidget />
       </div>
 
-      {/* Feature Cards */}
-      <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {features.map((feature) => {
-          const Icon = feature.icon;
-          return (
-            <Link
-              key={feature.href}
-              href={feature.href}
-              className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm transition-all hover:shadow-lg hover:-translate-y-1 dark:border-zinc-800 dark:bg-zinc-900"
-            >
-              <div
-                className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${feature.color} text-white shadow-lg`}
-              >
-                <Icon className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-                {feature.title}
+      {/* Main Navigation - 2 Column Grid */}
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+        {/* Food & Deals Button */}
+        <Link
+          href="/food"
+          className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-8 shadow-md transition-all hover:shadow-xl hover:-translate-y-1 dark:border-zinc-800 dark:bg-zinc-900"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg">
+              <Utensils className="h-7 w-7" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+                🍔 Food & Deals
               </h3>
-              <p className="mt-2 text-zinc-600 dark:text-zinc-400">{feature.description}</p>
-              <div className="mt-4 flex items-center text-sm font-medium text-asu-maroon dark:text-asu-gold">
-                Explore →
-              </div>
-            </Link>
-          );
-        })}
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                Campus eats, M&G spots & late night
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 text-sm font-medium text-asu-maroon group-hover:text-asu-gold transition-colors dark:text-asu-gold">
+            Explore →
+          </div>
+        </Link>
+
+        {/* Class Guide Button */}
+        <Link
+          href="/classes"
+          className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-8 shadow-md transition-all hover:shadow-xl hover:-translate-y-1 dark:border-zinc-800 dark:bg-zinc-900"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-lg">
+              <BookOpen className="h-7 w-7" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+                📚 Class Guide
+              </h3>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                Easy A&apos;s, Gen Eds & professor tips
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 text-sm font-medium text-asu-maroon group-hover:text-asu-gold transition-colors dark:text-asu-gold">
+            Explore →
+          </div>
+        </Link>
+      </div>
+
+      {/* Secondary Navigation - Community Banner */}
+      <div className="mt-4 max-w-3xl mx-auto">
+        <Link
+          href="/community"
+          className="group flex items-center justify-center gap-3 w-full rounded-2xl border border-zinc-200 bg-white py-4 px-6 shadow-md transition-all hover:shadow-xl hover:-translate-y-1 dark:border-zinc-800 dark:bg-zinc-900"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow">
+            <MessageSquare className="h-5 w-5" />
+          </div>
+          <div className="text-left">
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+              🗣️ Community Suggestions
+            </h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Share tips with fellow Sun Devils
+            </p>
+          </div>
+          <span className="ml-auto text-sm font-medium text-asu-maroon group-hover:text-asu-gold transition-colors dark:text-asu-gold">
+            Submit →
+          </span>
+        </Link>
       </div>
 
       {/* Coming Soon Banner */}
-      <div className="mt-20 overflow-hidden rounded-2xl bg-gradient-to-br from-asu-maroon to-maroon-800 p-8 text-white sm:p-12">
+      <div className="mt-16 overflow-hidden rounded-2xl bg-gradient-to-br from-asu-maroon to-maroon-800 p-8 text-white sm:p-12 max-w-3xl mx-auto">
         <div className="flex flex-col items-center justify-center text-center">
           <Image
             src="/asu_trident.svg"

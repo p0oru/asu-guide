@@ -28,7 +28,7 @@ export default function Navbar() {
             className="h-8 w-auto"
           />
           <span className="font-bold text-white text-lg tracking-tight">
-            Survival Guide
+            Sun Devil Guide
           </span>
         </Link>
 

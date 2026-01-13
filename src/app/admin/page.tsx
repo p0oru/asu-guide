@@ -250,7 +250,7 @@ export default function AdminPage() {
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
               Admin Dashboard
             </h1>
-            <p className="text-sm text-zinc-500">Manage your ASU Survival Guide content</p>
+            <p className="text-sm text-zinc-500">Manage your Sun Devil Guide content</p>
           </div>
         </div>
         <button

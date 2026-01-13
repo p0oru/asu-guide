@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ASU Survival Guide',
-  description: 'Your ultimate guide to surviving and thriving at Arizona State University',
+  title: 'Sun Devil Guide',
+  description: 'Your ultimate guide to navigating life at Arizona State University',
 };
 
 export default function RootLayout({
