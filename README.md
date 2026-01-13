@@ -52,8 +52,8 @@ This project is built and maintained by the ASU community to help fellow student
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/asu-survival-guide.git
-   cd asu-survival-guide
+   git clone https://github.com/p0oru/asu-guide.git
+   cd asu-guide
    ```
 
 2. **Install dependencies**
