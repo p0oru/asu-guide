@@ -15,8 +15,8 @@ import ComingSoon from '@/components/ComingSoon';
 
 interface Class {
   _id: string;
-  code: string;
-  name: string;
+  courseCode: string;
+  courseName: string;
   professor: string;
   description: string;
   genEd: string;
@@ -171,8 +171,10 @@ function ClassCard({ cls }: { cls: Class }) {
     <div className="group flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition-all hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
       {/* Header */}
       <div className="border-b border-zinc-100 bg-zinc-50 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-800/50">
-        <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{cls.code}</h3>
-        <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{cls.name}</p>
+        <h3 className="text-lg text-zinc-900 dark:text-zinc-100">
+          <span className="font-bold">{cls.courseCode}</span>
+          <span className="font-normal">: {cls.courseName}</span>
+        </h3>
       </div>
 
       {/* Content */}

@@ -26,8 +26,8 @@ import ConfirmModal from '@/components/ConfirmModal';
 
 interface Class {
   _id: string;
-  code: string;
-  name: string;
+  courseCode: string;
+  courseName: string;
   professor: string;
   description: string;
   genEd: string;
@@ -345,13 +345,13 @@ function ClassManagement({
         {/* Basic Info Row */}
         <div className="grid gap-3 sm:grid-cols-2">
           <input
-            name="code"
+            name="courseCode"
             placeholder="Course Code * (e.g., CSE 110)"
             required
             className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
           />
           <input
-            name="name"
+            name="courseName"
             placeholder="Course Name * (e.g., Intro to Programming)"
             required
             className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
@@ -509,10 +509,10 @@ function ClassManagement({
             >
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                    {cls.code}
+                  <span className="font-bold text-zinc-900 dark:text-zinc-100">
+                    {cls.courseCode}
                   </span>
-                  <span className="truncate text-sm text-zinc-500">{cls.name}</span>
+                  <span className="truncate text-sm text-zinc-500">{cls.courseName}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   {cls.difficulty && (

@@ -35,8 +35,8 @@ export async function getClasses(filters: ClassFilters = {}) {
     if (filters.search) {
       const searchRegex = { $regex: filters.search, $options: 'i' };
       query.$or = [
-        { code: searchRegex },
-        { name: searchRegex },
+        { courseCode: searchRegex },
+        { courseName: searchRegex },
         { professor: searchRegex },
         { description: searchRegex },
       ];
@@ -50,7 +50,7 @@ export async function getClasses(filters: ClassFilters = {}) {
       query.genEd = filters.genEd;
     }
 
-    const classes = await Class.find(query).sort({ code: 1 }).lean();
+    const classes = await Class.find(query).sort({ courseCode: 1 }).lean();
 
     // Convert MongoDB documents to plain objects
     return JSON.parse(JSON.stringify(classes));
@@ -174,8 +174,8 @@ export async function addClass(formData: FormData) {
   try {
     await dbConnect();
 
-    const code = formData.get('code') as string;
-    const name = formData.get('name') as string;
+    const courseCode = formData.get('courseCode') as string;
+    const courseName = formData.get('courseName') as string;
     const professor = formData.get('professor') as string;
     const description = formData.get('description') as string;
     const genEd = formData.get('genEd') as string;
@@ -185,8 +185,8 @@ export async function addClass(formData: FormData) {
     const rmpLink = formData.get('rmpLink') as string;
 
     // Validate required fields
-    if (!code || !name) {
-      return { success: false, error: 'Code and name are required' };
+    if (!courseCode || !courseName) {
+      return { success: false, error: 'Course code and name are required' };
     }
     if (!professor) {
       return { success: false, error: 'Professor is required' };
@@ -202,8 +202,8 @@ export async function addClass(formData: FormData) {
     }
 
     await Class.create({
-      code: code.trim().toUpperCase(),
-      name: name.trim(),
+      courseCode: courseCode.trim().toUpperCase(),
+      courseName: courseName.trim(),
       professor: professor.trim(),
       description: description.trim(),
       genEd,

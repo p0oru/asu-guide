@@ -2,8 +2,8 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IClass extends Document {
   // Required fields
-  code: string;
-  name: string;
+  courseCode: string;
+  courseName: string;
   professor: string;
   description: string;
   genEd: string;
@@ -18,13 +18,13 @@ export interface IClass extends Document {
 
 const ClassSchema = new Schema<IClass>(
   {
-    code: {
+    courseCode: {
       type: String,
       required: [true, 'Class code is required'],
       unique: true,
       trim: true,
     },
-    name: {
+    courseName: {
       type: String,
       required: [true, 'Class name is required'],
       trim: true,
