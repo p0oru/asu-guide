@@ -99,7 +99,7 @@ const typeStyles: Record<DeadlineType, { bg: string; border: string; text: strin
 };
 
 export default function SurvivalClock() {
-  const [nextDeadline, setNextDeadline] = useState<ReturnType<typeof getNextDeadline>>(null);
+  const [nextDeadline, setNextDeadline] = useState<ReturnType<typeof getNextDeadline> | null>(null);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [mounted, setMounted] = useState(false);
 
