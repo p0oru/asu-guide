@@ -1,7 +1,15 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { Search, BookOpen, User, GraduationCap } from 'lucide-react';
+import { 
+  Search, 
+  BookOpen, 
+  User, 
+  CheckCircle2, 
+  Laptop, 
+  PartyPopper,
+  ExternalLink 
+} from 'lucide-react';
 import { getClasses } from '@/lib/actions';
 import ComingSoon from '@/components/ComingSoon';
 
@@ -9,10 +17,13 @@ interface Class {
   _id: string;
   code: string;
   name: string;
-  professor?: string;
-  credits?: number;
-  difficulty?: 'Easy A' | 'Moderate' | 'Hard';
-  genEd?: string[];
+  professor: string;
+  description: string;
+  genEd: string;
+  difficulty: 'Light Workload' | 'Standard Pace' | 'Content Heavy';
+  attendance?: 'Mandatory' | 'Optional' | 'Unknown';
+  exams?: 'In-Person' | 'Online' | 'None' | 'Unknown';
+  rmpLink?: string;
 }
 
 interface ClassesClientProps {
@@ -21,15 +32,28 @@ interface ClassesClientProps {
 
 const difficultyFilters = [
   { value: '', label: 'All Difficulties' },
-  { value: 'Easy A', label: 'Easy A' },
-  { value: 'Moderate', label: 'Moderate' },
-  { value: 'Hard', label: 'Hard' },
+  { value: 'Light Workload', label: 'Light' },
+  { value: 'Standard Pace', label: 'Standard' },
+  { value: 'Content Heavy', label: 'Heavy' },
 ] as const;
+
+// Gen Ed full names for display
+const GEN_ED_LABELS: Record<string, string> = {
+  HUAD: 'Humanities, Arts and Design',
+  SOBE: 'Social and Behavioral Sciences',
+  SCIT: 'Scientific Thinking',
+  QTRS: 'Quantitative Reasoning',
+  MATH: 'Mathematics',
+  AMIT: 'American Institutions',
+  CIVI: 'Civic Engagement',
+  GCSI: 'Global Communities',
+  SUST: 'Sustainability',
+};
 
 export default function ClassesClient({ initialClasses }: ClassesClientProps) {
   const [classes, setClasses] = useState<Class[]>(initialClasses);
   const [search, setSearch] = useState('');
-  const [difficulty, setDifficulty] = useState<'' | 'Easy A' | 'Moderate' | 'Hard'>('');
+  const [difficulty, setDifficulty] = useState<'' | 'Light Workload' | 'Standard Pace' | 'Content Heavy'>('');
   const [isPending, startTransition] = useTransition();
 
   // Track if any filters are active
@@ -77,11 +101,11 @@ export default function ClassesClient({ initialClasses }: ClassesClientProps) {
               onClick={() => setDifficulty(filter.value)}
               className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 difficulty === filter.value
-                  ? filter.value === 'Easy A'
+                  ? filter.value === 'Light Workload'
                     ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
-                    : filter.value === 'Moderate'
+                    : filter.value === 'Standard Pace'
                     ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400'
-                    : filter.value === 'Hard'
+                    : filter.value === 'Content Heavy'
                     ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'
                     : 'bg-asu-maroon text-white'
                   : 'border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
@@ -117,70 +141,112 @@ export default function ClassesClient({ initialClasses }: ClassesClientProps) {
 }
 
 function ClassCard({ cls }: { cls: Class }) {
-  const getDifficultyStyles = (difficulty?: string) => {
+  const getDifficultyStyles = (difficulty: string) => {
     switch (difficulty) {
-      case 'Easy A':
+      case 'Light Workload':
         return 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400';
-      case 'Moderate':
+      case 'Standard Pace':
         return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400';
-      case 'Hard':
+      case 'Content Heavy':
         return 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400';
       default:
         return 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400';
     }
   };
 
-  return (
-    <div className="group overflow-hidden rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{cls.code}</h3>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{cls.name}</p>
-        </div>
+  const getDifficultyLabel = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Light Workload':
+        return 'Light';
+      case 'Standard Pace':
+        return 'Standard';
+      case 'Content Heavy':
+        return 'Heavy';
+      default:
+        return difficulty;
+    }
+  };
 
-        {/* Difficulty Badge */}
-        {cls.difficulty && (
+  return (
+    <div className="group flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition-all hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
+      {/* Header */}
+      <div className="border-b border-zinc-100 bg-zinc-50 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-800/50">
+        <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{cls.code}</h3>
+        <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{cls.name}</p>
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-1 flex-col p-5">
+        {/* Badges Row */}
+        <div className="mb-4 flex flex-wrap gap-2">
+          {/* Difficulty Badge */}
           <span
-            className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${getDifficultyStyles(
+            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${getDifficultyStyles(
               cls.difficulty
             )}`}
           >
-            {cls.difficulty}
+            {getDifficultyLabel(cls.difficulty)}
           </span>
-        )}
-      </div>
 
-      {/* Details */}
-      <div className="mt-4 space-y-2">
-        {cls.professor && (
-          <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-            <User className="h-4 w-4" />
-            <span>{cls.professor}</span>
-          </div>
-        )}
-
-        {cls.credits && (
-          <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-            <GraduationCap className="h-4 w-4" />
-            <span>{cls.credits} Credits</span>
-          </div>
-        )}
-      </div>
-
-      {/* Gen Ed Tags */}
-      {cls.genEd && cls.genEd.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {cls.genEd.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+          {/* Gen Ed Badge */}
+          {cls.genEd && (
+            <span 
+              className="rounded-full bg-zinc-200 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300"
+              title={GEN_ED_LABELS[cls.genEd] || cls.genEd}
             >
-              {tag}
+              {cls.genEd}
             </span>
-          ))}
+          )}
         </div>
-      )}
+
+        {/* Professor */}
+        <div className="mb-3 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <User className="h-4 w-4 shrink-0" />
+          <span>{cls.professor}</span>
+        </div>
+
+        {/* Logistics Row */}
+        <div className="mb-4 flex flex-wrap gap-3">
+          {cls.attendance === 'Optional' && (
+            <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>Attendance Optional</span>
+            </div>
+          )}
+          {cls.exams === 'Online' && (
+            <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400">
+              <Laptop className="h-3.5 w-3.5" />
+              <span>Online Exams</span>
+            </div>
+          )}
+          {cls.exams === 'None' && (
+            <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400">
+              <PartyPopper className="h-3.5 w-3.5" />
+              <span>No Exams</span>
+            </div>
+          )}
+        </div>
+
+        {/* Description */}
+        <p className="flex-1 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+          {cls.description}
+        </p>
+
+        {/* Footer - RMP Link */}
+        {cls.rmpLink && (
+          <div className="mt-4 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+            <a
+              href={cls.rmpLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-asu-gold/10 px-3 py-2 text-sm font-medium text-asu-gold transition-colors hover:bg-asu-gold/20"
+            >
+              View Professor Rating
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageSquare, Send, CheckCircle, Lightbulb } from 'lucide-react';
+import { MessageSquare, Send, CheckCircle, Lightbulb, GraduationCap } from 'lucide-react';
 import { submitSuggestion } from '@/lib/actions';
 
 const categories = [
@@ -14,6 +14,7 @@ export default function CommunityPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<'Class' | 'Food' | 'Other'>('Class');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,6 +29,7 @@ export default function CommunityPage() {
       if (result.success) {
         setIsSuccess(true);
         (e.target as HTMLFormElement).reset();
+        setSelectedType('Class');
       } else {
         setError(result.error || 'Something went wrong');
       }
@@ -95,26 +97,8 @@ export default function CommunityPage() {
       {/* Submission Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          {/* Suggestion Content */}
+          {/* Category - Now First */}
           <div>
-            <label
-              htmlFor="content"
-              className="block text-sm font-medium text-zinc-900 dark:text-zinc-100"
-            >
-              What&apos;s your suggestion? *
-            </label>
-            <textarea
-              id="content"
-              name="content"
-              rows={4}
-              required
-              placeholder="Share a tip, recommend a class, or tell us about a great food spot..."
-              className="mt-2 block w-full rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-maroon-500 focus:outline-none focus:ring-2 focus:ring-maroon-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
-            />
-          </div>
-
-          {/* Category */}
-          <div className="mt-4">
             <label
               htmlFor="type"
               className="block text-sm font-medium text-zinc-900 dark:text-zinc-100"
@@ -124,6 +108,8 @@ export default function CommunityPage() {
             <select
               id="type"
               name="type"
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value as 'Class' | 'Food' | 'Other')}
               className="mt-2 block w-full rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-900 focus:border-maroon-500 focus:outline-none focus:ring-2 focus:ring-maroon-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             >
               {categories.map((cat) => (
@@ -132,6 +118,99 @@ export default function CommunityPage() {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Conditional Fields Based on Category */}
+          <div className="mt-4">
+            {selectedType === 'Class' ? (
+              /* Class-specific fields */
+              <div className="space-y-4">
+                <div className="rounded-lg border border-maroon-200 bg-maroon-50/50 p-4 dark:border-maroon-900 dark:bg-maroon-950/30">
+                  <div className="mb-3 flex items-center gap-2 text-maroon-700 dark:text-maroon-300">
+                    <GraduationCap className="h-4 w-4" />
+                    <span className="text-sm font-medium">Class Details</span>
+                  </div>
+                  
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {/* Course Code */}
+                    <div>
+                      <label
+                        htmlFor="courseCode"
+                        className="block text-sm font-medium text-zinc-900 dark:text-zinc-100"
+                      >
+                        Course Code *
+                      </label>
+                      <input
+                        type="text"
+                        id="courseCode"
+                        name="courseCode"
+                        required
+                        placeholder="e.g. CSE 110"
+                        className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-maroon-500 focus:outline-none focus:ring-2 focus:ring-maroon-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+                      />
+                    </div>
+
+                    {/* Professor */}
+                    <div>
+                      <label
+                        htmlFor="professor"
+                        className="block text-sm font-medium text-zinc-900 dark:text-zinc-100"
+                      >
+                        Professor *
+                      </label>
+                      <input
+                        type="text"
+                        id="professor"
+                        name="professor"
+                        required
+                        placeholder="e.g. Dr. Smith"
+                        className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-maroon-500 focus:outline-none focus:ring-2 focus:ring-maroon-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Reason */}
+                  <div className="mt-3">
+                    <label
+                      htmlFor="reason"
+                      className="block text-sm font-medium text-zinc-900 dark:text-zinc-100"
+                    >
+                      Why is this class good/easy? *
+                    </label>
+                    <textarea
+                      id="reason"
+                      name="reason"
+                      rows={3}
+                      required
+                      placeholder="e.g. Light workload, interesting lectures, fair grading..."
+                      className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-maroon-500 focus:outline-none focus:ring-2 focus:ring-maroon-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Generic content field for Food/Other */
+              <div>
+                <label
+                  htmlFor="content"
+                  className="block text-sm font-medium text-zinc-900 dark:text-zinc-100"
+                >
+                  What&apos;s your suggestion? *
+                </label>
+                <textarea
+                  id="content"
+                  name="content"
+                  rows={4}
+                  required
+                  placeholder={
+                    selectedType === 'Food'
+                      ? 'Tell us about a great food spot, deals, or hidden gems...'
+                      : 'Share a tip, study spot, or campus hack...'
+                  }
+                  className="mt-2 block w-full rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-maroon-500 focus:outline-none focus:ring-2 focus:ring-maroon-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+                />
+              </div>
+            )}
           </div>
 
           {/* Username */}

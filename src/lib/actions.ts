@@ -9,7 +9,8 @@ import Suggestion from '@/models/Suggestion';
 // Types for filters
 interface ClassFilters {
   search?: string;
-  difficulty?: 'Easy A' | 'Moderate' | 'Hard' | '';
+  difficulty?: 'Light Workload' | 'Standard Pace' | 'Content Heavy' | '';
+  genEd?: string;
 }
 
 interface PlaceFilters {
@@ -37,11 +38,16 @@ export async function getClasses(filters: ClassFilters = {}) {
         { code: searchRegex },
         { name: searchRegex },
         { professor: searchRegex },
+        { description: searchRegex },
       ];
     }
 
     if (filters.difficulty) {
       query.difficulty = filters.difficulty;
+    }
+
+    if (filters.genEd) {
+      query.genEd = filters.genEd;
     }
 
     const classes = await Class.find(query).sort({ code: 1 }).lean();
@@ -110,19 +116,50 @@ export async function submitSuggestion(formData: FormData) {
   try {
     await dbConnect();
 
-    const content = formData.get('content') as string;
     const type = formData.get('type') as 'Class' | 'Food' | 'Other';
     const username = (formData.get('username') as string) || 'Anonymous';
 
-    if (!content || content.trim().length === 0) {
-      return { success: false, error: 'Suggestion content is required' };
+    // Class-specific fields
+    const courseCode = formData.get('courseCode') as string;
+    const professor = formData.get('professor') as string;
+    const reason = formData.get('reason') as string;
+
+    // Generic content field (for Food/Other)
+    const content = formData.get('content') as string;
+
+    // Validation based on type
+    if (type === 'Class') {
+      if (!courseCode || courseCode.trim().length === 0) {
+        return { success: false, error: 'Course code is required' };
+      }
+      if (!professor || professor.trim().length === 0) {
+        return { success: false, error: 'Professor name is required' };
+      }
+      if (!reason || reason.trim().length === 0) {
+        return { success: false, error: 'Please explain why this class is good' };
+      }
+    } else {
+      if (!content || content.trim().length === 0) {
+        return { success: false, error: 'Suggestion content is required' };
+      }
     }
 
+    // Build content for display in admin (for Class type, create a summary)
+    const displayContent = type === 'Class'
+      ? `${courseCode?.trim()} with ${professor?.trim()}: ${reason?.trim()}`
+      : content.trim();
+
     const suggestion = await Suggestion.create({
-      content: content.trim(),
+      content: displayContent,
       type,
       username: username.trim() || 'Anonymous',
       status: 'Pending',
+      // Class-specific fields (only saved if type is Class)
+      ...(type === 'Class' && {
+        courseCode: courseCode?.trim().toUpperCase(),
+        professor: professor?.trim(),
+        reason: reason?.trim(),
+      }),
     });
 
     return { success: true, id: suggestion._id.toString() };
@@ -140,25 +177,40 @@ export async function addClass(formData: FormData) {
     const code = formData.get('code') as string;
     const name = formData.get('name') as string;
     const professor = formData.get('professor') as string;
-    const credits = formData.get('credits') as string;
+    const description = formData.get('description') as string;
+    const genEd = formData.get('genEd') as string;
     const difficulty = formData.get('difficulty') as string;
-    const genEdStr = formData.get('genEd') as string;
+    const attendance = formData.get('attendance') as string;
+    const exams = formData.get('exams') as string;
+    const rmpLink = formData.get('rmpLink') as string;
 
+    // Validate required fields
     if (!code || !name) {
       return { success: false, error: 'Code and name are required' };
     }
-
-    const genEd = genEdStr
-      ? genEdStr.split(',').map((g) => g.trim()).filter(Boolean)
-      : [];
+    if (!professor) {
+      return { success: false, error: 'Professor is required' };
+    }
+    if (!description || description.trim().length === 0) {
+      return { success: false, error: 'Description is required' };
+    }
+    if (!genEd) {
+      return { success: false, error: 'Gen Ed category is required' };
+    }
+    if (!difficulty) {
+      return { success: false, error: 'Difficulty is required' };
+    }
 
     await Class.create({
       code: code.trim().toUpperCase(),
       name: name.trim(),
-      professor: professor?.trim() || undefined,
-      credits: credits ? parseInt(credits) : undefined,
-      difficulty: difficulty || undefined,
+      professor: professor.trim(),
+      description: description.trim(),
       genEd,
+      difficulty,
+      attendance: attendance || 'Unknown',
+      exams: exams || 'Unknown',
+      rmpLink: rmpLink?.trim() || undefined,
     });
 
     revalidatePath('/classes');

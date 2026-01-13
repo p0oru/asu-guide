@@ -1,12 +1,17 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IClass extends Document {
+  // Required fields
   code: string;
   name: string;
-  professor?: string;
-  credits?: number;
-  difficulty?: 'Easy A' | 'Moderate' | 'Hard';
-  genEd?: string[];
+  professor: string;
+  description: string;
+  genEd: string;
+  difficulty: 'Light Workload' | 'Standard Pace' | 'Content Heavy';
+  // Optional fields
+  attendance?: 'Mandatory' | 'Optional' | 'Unknown';
+  exams?: 'In-Person' | 'Online' | 'None' | 'Unknown';
+  rmpLink?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,18 +31,37 @@ const ClassSchema = new Schema<IClass>(
     },
     professor: {
       type: String,
+      required: [true, 'Professor is required'],
       trim: true,
     },
-    credits: {
-      type: Number,
+    description: {
+      type: String,
+      required: [true, 'Description is required'],
+      trim: true,
+    },
+    genEd: {
+      type: String,
+      required: [true, 'Gen Ed category is required'],
+      enum: ['HUAD', 'SOBE', 'SCIT', 'QTRS', 'MATH', 'AMIT', 'CIVI', 'GCSI', 'SUST'],
     },
     difficulty: {
       type: String,
-      enum: ['Easy A', 'Moderate', 'Hard'],
+      required: [true, 'Difficulty is required'],
+      enum: ['Light Workload', 'Standard Pace', 'Content Heavy'],
     },
-    genEd: {
-      type: [String],
-      default: [],
+    attendance: {
+      type: String,
+      enum: ['Mandatory', 'Optional', 'Unknown'],
+      default: 'Unknown',
+    },
+    exams: {
+      type: String,
+      enum: ['In-Person', 'Online', 'None', 'Unknown'],
+      default: 'Unknown',
+    },
+    rmpLink: {
+      type: String,
+      trim: true,
     },
   },
   {

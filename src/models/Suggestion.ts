@@ -5,6 +5,10 @@ export interface ISuggestion extends Document {
   type?: 'Class' | 'Food' | 'Other';
   username?: string;
   status?: 'Pending' | 'Approved' | 'Rejected';
+  // Class-specific fields
+  courseCode?: string;
+  professor?: string;
+  reason?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +33,19 @@ const SuggestionSchema = new Schema<ISuggestion>(
       type: String,
       enum: ['Pending', 'Approved', 'Rejected'],
       default: 'Pending',
+    },
+    // Class-specific fields
+    courseCode: {
+      type: String,
+      trim: true,
+    },
+    professor: {
+      type: String,
+      trim: true,
+    },
+    reason: {
+      type: String,
+      trim: true,
     },
   },
   {

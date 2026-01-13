@@ -28,11 +28,27 @@ interface Class {
   _id: string;
   code: string;
   name: string;
-  professor?: string;
-  credits?: number;
-  difficulty?: string;
-  genEd?: string[];
+  professor: string;
+  description: string;
+  genEd: string;
+  difficulty: 'Light Workload' | 'Standard Pace' | 'Content Heavy';
+  attendance?: 'Mandatory' | 'Optional' | 'Unknown';
+  exams?: 'In-Person' | 'Online' | 'None' | 'Unknown';
+  rmpLink?: string;
 }
+
+// Gen Ed options for dropdown
+const GEN_ED_OPTIONS = [
+  { value: 'HUAD', label: 'HUAD (Humanities, Arts and Design)' },
+  { value: 'SOBE', label: 'SOBE (Social and Behavioral Sciences)' },
+  { value: 'SCIT', label: 'SCIT (Scientific Thinking in Natural Sciences)' },
+  { value: 'QTRS', label: 'QTRS (Quantitative Reasoning)' },
+  { value: 'MATH', label: 'MATH (Mathematics)' },
+  { value: 'AMIT', label: 'AMIT (American Institutions)' },
+  { value: 'CIVI', label: 'CIVI (Governance and Civic Engagement)' },
+  { value: 'GCSI', label: 'GCSI (Global Communities, Societies and Individuals)' },
+  { value: 'SUST', label: 'SUST (Sustainability)' },
+] as const;
 
 interface Place {
   _id: string;
@@ -54,6 +70,10 @@ interface Suggestion {
   username?: string;
   status?: string;
   createdAt: string;
+  // Class-specific fields
+  courseCode?: string;
+  professor?: string;
+  reason?: string;
 }
 
 export default function AdminPage() {
@@ -291,15 +311,31 @@ function ClassManagement({
   onDelete: (id: string) => void;
 }) {
   const [isAdding, setIsAdding] = useState(false);
+  const [formError, setFormError] = useState('');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setIsAdding(true);
+    setFormError('');
+    
     const formData = new FormData(e.currentTarget);
-    await addClass(formData);
-    (e.target as HTMLFormElement).reset();
+    
+    // Client-side validation for description
+    const description = formData.get('description') as string;
+    if (!description || description.trim().length === 0) {
+      setFormError('Insider Description is required');
+      return;
+    }
+    
+    setIsAdding(true);
+    const result = await addClass(formData);
+    
+    if (result.success) {
+      (e.target as HTMLFormElement).reset();
+      onRefresh();
+    } else {
+      setFormError(result.error || 'Failed to add class');
+    }
     setIsAdding(false);
-    onRefresh();
   }
 
   return (
@@ -312,52 +348,156 @@ function ClassManagement({
       </div>
 
       {/* Add Form */}
-      <form onSubmit={handleSubmit} className="mb-6 space-y-3 rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800">
+      <form onSubmit={handleSubmit} className="mb-6 space-y-4 rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800">
+        {/* Basic Info Row */}
         <div className="grid gap-3 sm:grid-cols-2">
           <input
             name="code"
-            placeholder="Course Code *"
+            placeholder="Course Code * (e.g., CSE 110)"
             required
             className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
           />
           <input
             name="name"
-            placeholder="Course Name *"
+            placeholder="Course Name * (e.g., Intro to Programming)"
             required
             className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
           />
-          <input
-            name="professor"
-            placeholder="Professor"
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          />
-          <input
-            name="credits"
-            type="number"
-            placeholder="Credits"
-            min="1"
-            max="6"
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          />
-          <select
-            name="difficulty"
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          >
-            <option value="">Select Difficulty</option>
-            <option value="Easy A">Easy A</option>
-            <option value="Moderate">Moderate</option>
-            <option value="Hard">Hard</option>
-          </select>
-          <input
-            name="genEd"
-            placeholder="Gen Ed (comma-separated)"
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        </div>
+
+        {/* Professor */}
+        <input
+          name="professor"
+          placeholder="Professor *"
+          required
+          className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        />
+
+        {/* Dropdowns Row */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          {/* Gen Ed Dropdown */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              General Studies (Gold) *
+            </label>
+            <select
+              name="genEd"
+              required
+              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              <option value="">Select Gen Ed Category</option>
+              {GEN_ED_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Difficulty Dropdown */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              Difficulty *
+            </label>
+            <select
+              name="difficulty"
+              required
+              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              <option value="">Select Difficulty</option>
+              <option value="Light Workload">Light Workload</option>
+              <option value="Standard Pace">Standard Pace</option>
+              <option value="Content Heavy">Content Heavy</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Logistics Section */}
+        <div className="space-y-3 rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Logistics</p>
+          
+          {/* Attendance Radio Group */}
+          <div>
+            <label className="mb-2 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              Attendance
+            </label>
+            <div className="flex gap-2">
+              {['Mandatory', 'Optional'].map((option) => (
+                <label
+                  key={option}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm transition-colors has-[:checked]:border-asu-maroon has-[:checked]:bg-asu-maroon/10 dark:border-zinc-700 dark:has-[:checked]:border-asu-maroon"
+                >
+                  <input
+                    type="radio"
+                    name="attendance"
+                    value={option}
+                    className="sr-only"
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Exams Radio Group */}
+          <div>
+            <label className="mb-2 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              Exams
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: 'In-Person', label: 'In-Person' },
+                { value: 'Online', label: 'Online' },
+                { value: 'None', label: 'No Exams' },
+              ].map((option) => (
+                <label
+                  key={option.value}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm transition-colors has-[:checked]:border-asu-maroon has-[:checked]:bg-asu-maroon/10 dark:border-zinc-700 dark:has-[:checked]:border-asu-maroon"
+                >
+                  <input
+                    type="radio"
+                    name="exams"
+                    value={option.value}
+                    className="sr-only"
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Insider Description */}
+        <div>
+          <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+            Insider Description *
+          </label>
+          <textarea
+            name="description"
+            placeholder="Share insider tips about this class..."
+            rows={3}
+            required
+            className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
           />
         </div>
+
+        {/* RMP Link */}
+        <input
+          name="rmpLink"
+          type="url"
+          placeholder="RateMyProfessor Link (optional)"
+          className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        />
+
+        {/* Error Message */}
+        {formError && (
+          <p className="text-sm text-red-600">{formError}</p>
+        )}
+
         <button
           type="submit"
           disabled={isAdding}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-asu-maroon py-2 text-sm font-medium text-white hover:bg-maroon-700 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-asu-maroon py-2.5 text-sm font-medium text-white hover:bg-maroon-700 disabled:opacity-50"
         >
           <Plus className="h-4 w-4" />
           {isAdding ? 'Adding...' : 'Add Class'}
@@ -365,7 +505,7 @@ function ClassManagement({
       </form>
 
       {/* List */}
-      <div className="max-h-64 space-y-2 overflow-y-auto">
+      <div className="max-h-72 space-y-2 overflow-y-auto">
         {classes.length === 0 ? (
           <p className="py-4 text-center text-sm text-zinc-500">No classes yet</p>
         ) : (
@@ -374,28 +514,37 @@ function ClassManagement({
               key={cls._id}
               className="flex items-center justify-between rounded-lg border border-zinc-100 p-3 dark:border-zinc-800"
             >
-              <div>
-                <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                  {cls.code}
-                </span>
-                <span className="ml-2 text-sm text-zinc-500">{cls.name}</span>
-                {cls.difficulty && (
-                  <span
-                    className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
-                      cls.difficulty === 'Easy A'
-                        ? 'bg-green-100 text-green-700'
-                        : cls.difficulty === 'Moderate'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}
-                  >
-                    {cls.difficulty}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                    {cls.code}
                   </span>
-                )}
+                  <span className="truncate text-sm text-zinc-500">{cls.name}</span>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {cls.difficulty && (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs ${
+                        cls.difficulty === 'Light Workload'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
+                          : cls.difficulty === 'Standard Pace'
+                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400'
+                          : 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'
+                      }`}
+                    >
+                      {cls.difficulty}
+                    </span>
+                  )}
+                  {cls.genEd && (
+                    <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300">
+                      {cls.genEd}
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => onDelete(cls._id)}
-                className="rounded-lg p-2 text-zinc-400 hover:bg-red-50 hover:text-red-600"
+                className="ml-2 shrink-0 rounded-lg p-2 text-zinc-400 hover:bg-red-50 hover:text-red-600"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -563,7 +712,15 @@ function SuggestionInbox({
             >
               <div className="mb-2 flex items-start justify-between gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      suggestion.type === 'Class'
+                        ? 'bg-maroon-100 text-maroon-700 dark:bg-maroon-950 dark:text-maroon-300'
+                        : suggestion.type === 'Food'
+                        ? 'bg-gold-100 text-gold-700 dark:bg-gold-950 dark:text-gold-300'
+                        : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400'
+                    }`}
+                  >
                     {suggestion.type || 'Other'}
                   </span>
                   <span className="text-xs text-zinc-400">
@@ -578,9 +735,25 @@ function SuggestionInbox({
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
-              <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                {suggestion.content}
-              </p>
+
+              {/* Class-specific display */}
+              {suggestion.type === 'Class' && suggestion.courseCode ? (
+                <div>
+                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                    🎓 <span className="font-bold">{suggestion.courseCode}</span>{' '}
+                    with <span className="font-bold">{suggestion.professor}</span>
+                  </p>
+                  <p className="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+                    {suggestion.reason}
+                  </p>
+                </div>
+              ) : (
+                /* Generic display for Food/Other */
+                <p className="text-sm text-zinc-700 dark:text-zinc-300">
+                  {suggestion.content}
+                </p>
+              )}
+
               <p className="mt-2 text-xs text-zinc-400">
                 {new Date(suggestion.createdAt).toLocaleDateString()}
               </p>
