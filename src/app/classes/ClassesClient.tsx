@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   Search, 
   BookOpen, 
@@ -8,9 +8,11 @@ import {
   CheckCircle2, 
   Laptop, 
   PartyPopper,
-  ExternalLink 
+  ExternalLink,
+  CalendarSearch,
+  Star,
+  HelpCircle
 } from 'lucide-react';
-import { getClasses } from '@/lib/actions';
 import ComingSoon from '@/components/ComingSoon';
 
 interface Class {
@@ -50,24 +52,70 @@ const GEN_ED_LABELS: Record<string, string> = {
   SUST: 'Sustainability',
 };
 
+// Helper: Build ASU Class Search URL from course code
+function getClassSearchUrl(courseCode: string): string {
+  const parts = courseCode.trim().split(/\s+/);
+  const subject = parts[0] || '';
+  const number = parts[1] || '';
+  return `https://catalog.apps.asu.edu/catalog/classes?keywords=${subject}+${number}`;
+}
+
+// Helper: Get professor link (RMP if found, otherwise ASU Search)
+function getProfessorLink(
+  professorName: string,
+  description: string,
+  rmpLink?: string
+): { url: string; isRmp: boolean } {
+  // First check the dedicated rmpLink field
+  if (rmpLink) {
+    return { url: rmpLink, isRmp: true };
+  }
+
+  // Then check description for RMP link
+  const rmpRegex = /https?:\/\/(?:www\.)?ratemyprofessors\.com[^\s)"]*/i;
+  const match = description.match(rmpRegex);
+  if (match) {
+    return { url: match[0], isRmp: true };
+  }
+
+  // Fallback to ASU Search
+  const encodedName = encodeURIComponent(professorName);
+  return {
+    url: `https://search.asu.edu/?search-tabs=all&q=${encodedName}`,
+    isRmp: false,
+  };
+}
+
 export default function ClassesClient({ initialClasses }: ClassesClientProps) {
-  const [classes, setClasses] = useState<Class[]>(initialClasses);
-  const [search, setSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [difficulty, setDifficulty] = useState<'' | 'Light Workload' | 'Standard Pace' | 'Content Heavy'>('');
-  const [isPending, startTransition] = useTransition();
 
   // Track if any filters are active
-  const hasActiveFilters = search || difficulty;
+  const hasActiveFilters = searchQuery || difficulty;
 
-  useEffect(() => {
-    startTransition(async () => {
-      const filtered = await getClasses({
-        search: search || undefined,
-        difficulty: difficulty || undefined,
-      });
-      setClasses(filtered);
+  // Client-side filtering with useMemo for performance
+  const filteredClasses = useMemo(() => {
+    return initialClasses.filter((cls) => {
+      // Check difficulty filter
+      if (difficulty && cls.difficulty !== difficulty) {
+        return false;
+      }
+
+      // Check search query (case-insensitive)
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesCourseCode = cls.courseCode.toLowerCase().includes(query);
+        const matchesCourseName = cls.courseName.toLowerCase().includes(query);
+        const matchesProfessor = cls.professor.toLowerCase().includes(query);
+
+        if (!matchesCourseCode && !matchesCourseName && !matchesProfessor) {
+          return false;
+        }
+      }
+
+      return true;
     });
-  }, [search, difficulty]);
+  }, [initialClasses, searchQuery, difficulty]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -87,8 +135,8 @@ export default function ClassesClient({ initialClasses }: ClassesClientProps) {
           <input
             type="text"
             placeholder="Search by course code, name, or professor..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2 pl-10 pr-4 text-sm text-zinc-900 placeholder-zinc-400 focus:border-asu-maroon focus:outline-none focus:ring-2 focus:ring-asu-maroon/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
           />
         </div>
@@ -117,15 +165,10 @@ export default function ClassesClient({ initialClasses }: ClassesClientProps) {
         </div>
       </div>
 
-      {/* Loading State */}
-      {isPending && (
-        <div className="mb-4 text-center text-sm text-zinc-500">Updating results...</div>
-      )}
-
       {/* Results Grid or Coming Soon */}
-      {classes.length > 0 ? (
+      {filteredClasses.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {classes.map((cls) => (
+          {filteredClasses.map((cls) => (
             <ClassCard key={cls._id} cls={cls} />
           ))}
         </div>
@@ -234,20 +277,49 @@ function ClassCard({ cls }: { cls: Class }) {
           {cls.description}
         </p>
 
-        {/* Footer - RMP Link */}
-        {cls.rmpLink && (
-          <div className="mt-4 border-t border-zinc-100 pt-4 dark:border-zinc-800">
-            <a
-              href={cls.rmpLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-asu-gold/10 px-3 py-2 text-sm font-medium text-asu-gold transition-colors hover:bg-asu-gold/20"
-            >
-              View Professor Rating
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-          </div>
-        )}
+        {/* Footer - Smart Redirection Buttons */}
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+          {/* Check Availability Button */}
+          <a
+            href={getClassSearchUrl(cls.courseCode)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:border-zinc-600"
+          >
+            <CalendarSearch className="h-3.5 w-3.5" />
+            Check Availability
+          </a>
+
+          {/* Professor Intel Button */}
+          {(() => {
+            const profLink = getProfessorLink(cls.professor, cls.description, cls.rmpLink);
+            return (
+              <a
+                href={profLink.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  profLink.isRmp
+                    ? 'border-asu-gold/30 bg-asu-gold/10 text-asu-gold hover:bg-asu-gold/20 hover:border-asu-gold/50'
+                    : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:border-zinc-600'
+                }`}
+              >
+                {profLink.isRmp ? (
+                  <>
+                    <Star className="h-3.5 w-3.5" />
+                    RateMyProf
+                  </>
+                ) : (
+                  <>
+                    <HelpCircle className="h-3.5 w-3.5" />
+                    Who is this?
+                  </>
+                )}
+                <ExternalLink className="h-3 w-3 opacity-60" />
+              </a>
+            );
+          })()}
+        </div>
       </div>
     </div>
   );

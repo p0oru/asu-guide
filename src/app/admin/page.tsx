@@ -10,6 +10,8 @@ import {
   Plus,
   LogOut,
   ArrowRight,
+  GraduationCap,
+  Eye,
 } from 'lucide-react';
 import {
   getClasses,
@@ -86,6 +88,12 @@ interface Suggestion {
   reason?: string;
 }
 
+interface AdminStats {
+  classes: number;
+  places: number;
+  visits: number;
+}
+
 export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [accessCode, setAccessCode] = useState('');
@@ -96,6 +104,7 @@ export default function AdminPage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [places, setPlaces] = useState<Place[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
 
   // Delete modal states
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -121,6 +130,17 @@ export default function AdminPage() {
     setClasses(classData);
     setPlaces(placeData);
     setSuggestions(suggestionData);
+
+    // Fetch analytics stats
+    try {
+      const res = await fetch('/api/analytics');
+      if (res.ok) {
+        const statsData = await res.json();
+        setStats(statsData);
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    }
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -253,6 +273,57 @@ export default function AdminPage() {
           <LogOut className="h-4 w-4" />
           Logout
         </button>
+      </div>
+
+      {/* Stats Grid - Command Center */}
+      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+        <div className="rounded-xl border border-zinc-200 bg-gradient-to-br from-asu-maroon/10 to-asu-maroon/5 p-5 dark:border-zinc-800 dark:from-asu-maroon/20 dark:to-asu-maroon/10">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-asu-maroon/20 p-2 dark:bg-asu-maroon/30">
+              <GraduationCap className="h-5 w-5 text-asu-maroon dark:text-asu-gold" />
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Total Classes
+              </p>
+              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                {stats?.classes ?? '—'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 bg-gradient-to-br from-asu-gold/10 to-asu-gold/5 p-5 dark:border-zinc-800 dark:from-asu-gold/20 dark:to-asu-gold/10">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-asu-gold/20 p-2 dark:bg-asu-gold/30">
+              <Utensils className="h-5 w-5 text-asu-gold" />
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Total Places
+              </p>
+              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                {stats?.places ?? '—'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-5 dark:border-zinc-800 dark:from-blue-500/20 dark:to-blue-500/10">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-blue-500/20 p-2 dark:bg-blue-500/30">
+              <Eye className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Unique Visitors
+              </p>
+              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                {stats?.visits ?? '—'}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
